@@ -633,16 +633,16 @@ class MonitorServiceTest {
         assertThrows(MonitorDatabaseException.class,
                 () -> monitorService.modifyMonitor(dto.getMonitor(), dto.getParams(), null, null));
 
-        // 测试逻辑：当 scrape 不等于 static（且不为空），并且 instance 为空时，instance 应被设置为 "unknown"
-        reset(monitorDao); // 重置前面代码中对 monitorDao 的 mock
+        // Test logic: When scrape is not equal to static (and not null), and instance is empty, instance should be set to "unknown"
+        reset(monitorDao); // Reset the mock of monitorDao from previous code
 
         long testSdMonitorId = 2L;
         Monitor sdMonitor = Monitor.builder()
                 .id(testSdMonitorId)
                 .app("app")
                 .name("memory")
-                .scrape("custom_sd") // 非 static
-                .instance("")        // instance 为空
+                .scrape("custom_sd") // Not static
+                .instance("")        // Instance is empty
                 .intervals(1)
                 .build();
 
@@ -651,7 +651,7 @@ class MonitorServiceTest {
                 .app("app")
                 .name("memory")
                 .jobId(2L)
-                .status(CommonConstants.MONITOR_UP_CODE) // 保证非暂停状态，走到后续逻辑
+                .status(CommonConstants.MONITOR_UP_CODE) // Ensure not paused state to proceed to following logic
                 .build();
 
         List<Param> emptyParams = new ArrayList<>();
@@ -660,17 +660,17 @@ class MonitorServiceTest {
         mockJob.setParams(new ArrayList<>());
 
         when(monitorDao.findById(testSdMonitorId)).thenReturn(Optional.of(preSdMonitor));
-        when(appService.getAppDefine("custom_sd")).thenReturn(mockJob); // 根据 scrape 查询 job
+        when(appService.getAppDefine("custom_sd")).thenReturn(mockJob); // Query job based on scrape
         when(collectJobScheduling.updateAsyncCollectJob(any(Job.class))).thenReturn(2L);
         when(monitorDao.save(any(Monitor.class))).thenReturn(sdMonitor);
 
         assertDoesNotThrow(() -> monitorService.modifyMonitor(sdMonitor, emptyParams, null, null));
 
-        // 断言 instance 被赋值为 unknown
+        // Assert that instance is assigned as unknown
         assertEquals("unknown", sdMonitor.getInstance());
 
-        // 测试逻辑：端口验证（有变无，无变有）
-        // 场景一：原来没带 port mark（或者带有），现在 params 里面 port 有值
+        // Test logic: Port verification (from none to exists, from exists to none)
+        // Scenario 1: Originally without port mark (or with one), now port has value in params
         reset(monitorDao);
 
         long testPortMonitorId = 3L;
@@ -701,10 +701,10 @@ class MonitorServiceTest {
 
         assertDoesNotThrow(() -> monitorService.modifyMonitor(portMonitor, portParams, null, null));
 
-        // 断言 instance 追加了 port
+        // Assert that instance appended the port
         assertEquals("127.0.0.1:8080", portMonitor.getInstance());
 
-        // 场景二：原来 instance 带有 port mark，现在 params 里面 port 没值
+        // Scenario 2: Originally instance has port mark, now port has no value in params
         reset(monitorDao);
 
         long testNoPortMonitorId = 4L;
@@ -713,7 +713,7 @@ class MonitorServiceTest {
                 .app("app")
                 .name("memory")
                 .scrape(CommonConstants.SCRAPE_STATIC)
-                .instance("127.0.0.1:8080") // 这里原始 instance 带了 port
+                .instance("127.0.0.1:8080") // Original instance has port
                 .intervals(1)
                 .build();
 
@@ -734,7 +734,7 @@ class MonitorServiceTest {
 
         assertDoesNotThrow(() -> monitorService.modifyMonitor(noPortMonitor, noPortParams, null, null));
 
-        // 断言 instance 的 port mark 被移除
+        // Assert that the port mark in instance is removed
         assertEquals("127.0.0.1", noPortMonitor.getInstance());
     }
 
