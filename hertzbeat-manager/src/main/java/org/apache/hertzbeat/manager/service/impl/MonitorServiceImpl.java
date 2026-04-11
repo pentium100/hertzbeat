@@ -388,7 +388,6 @@ public class MonitorServiceImpl implements MonitorService {
         if (!isStatic && !StringUtils.hasText(monitor.getInstance())) {
             monitor.setInstance("unknown");
         }
-
         String instance = monitor.getInstance();
         // The port field may be null
         Param portParam = params.stream()
@@ -398,14 +397,7 @@ public class MonitorServiceImpl implements MonitorService {
         String portWithMark = (Objects.isNull(portParam) || !StringUtils.hasText(portParam.getParamValue()))
             ? ""
             : SignConstants.DOUBLE_MARK + portParam.getParamValue();
-        if (IpDomainUtil.isHasPortWithMark(instance)){
-            instance = Arrays.stream(instance.split(":")).findFirst().orElse("");
-        }
-        if (Objects.nonNull(instance)) {
-            instance = instance + portWithMark;
-        }
-
-
+        instance = instance + portWithMark;
         monitor.setInstance(instance);
 
         if (preMonitor.getStatus() != CommonConstants.MONITOR_PAUSED_CODE) {
